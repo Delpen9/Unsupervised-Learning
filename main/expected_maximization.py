@@ -7,9 +7,6 @@ import pandas as pd
 from scipy.spatial import distance
 from itertools import permutations
 
-# SKLearn Libraries
-from sklearn.mixture import GaussianMixture
-
 # Metrics
 from sklearn.metrics import accuracy_score, f1_score
 
