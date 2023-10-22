@@ -7,10 +7,6 @@ import pandas as pd
 from scipy.spatial import distance
 from itertools import permutations
 
-# Plotting Libraries
-import matplotlib.pyplot as plt
-import seaborn as sns
-
 # SKLearn Libraries
 from sklearn.mixture import GaussianMixture
 
