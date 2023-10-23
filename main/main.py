@@ -23,12 +23,12 @@ from data_preprocessing import (
     convert_pandas_to_dataloader,
 )
 
-from expected_maximization import (
-    ExpectedMaximizer,
+from k_means import (
+    KMeans,
 )
 
 
-def fit_expected_maximizer(
+def fit_k_means(
     auction_train_X: pd.DataFrame,
     auction_train_y: pd.Series,
     n_clusters: int,
@@ -36,17 +36,17 @@ def fit_expected_maximizer(
     metric: str = "euclidean",
     get_f1: bool = False,
 ) -> Union[tuple[float, list[int]], tuple[float, list[int], float, float]]:
-    expected_maximizer = ExpectedMaximizer(
+    k_means = KMeans(
         X=auction_train_X,
         true_labels=auction_train_y.values.astype(int).flatten(),
         n_clusters=n_clusters,
         metric=metric,
     )
-    expected_maximizer.get_expected_maximization(num_iterations)
-    inertia = expected_maximizer.compute_inertia()
-    cluster_sizes = expected_maximizer.get_cluster_sizes()
+    k_means.get_k_means(num_iterations)
+    inertia = k_means.compute_inertia()
+    cluster_sizes = k_means.get_cluster_sizes()
     if get_f1 == True:
-        (accuracy, f1) = expected_maximizer.get_accuracy_and_f1_score()
+        (accuracy, f1) = k_means.get_accuracy_and_f1_score()
         return (inertia, cluster_sizes, accuracy, f1)
     return (inertia, cluster_sizes)
 
@@ -73,7 +73,7 @@ def save_elbow_graph(
     plt.close()
 
 
-def get_expected_maximizer_elbow_graph(
+def get_k_means_elbow_graph(
     auction_train_X: pd.DataFrame,
     auction_train_y: pd.Series,
     max_clusters: int = 30,
@@ -82,13 +82,13 @@ def get_expected_maximizer_elbow_graph(
 ) -> None:
     elbow_data = []
     for n_clusters in range(2, max_clusters + 1):
-        inertia, _ = fit_expected_maximizer(
+        inertia, _ = fit_k_means(
             auction_train_X, auction_train_y, n_clusters, num_iterations, metric
         )
         elbow_data.append([n_clusters, inertia])
     elbow_df = pd.DataFrame(elbow_data, columns=["Clusters", "Inertia"])
 
-    save_elbow_graph(df=elbow_df, filename=rf"expected_maximizer_elbow_graph.png")
+    save_elbow_graph(df=elbow_df, filename=rf"k_means_elbow_graph.png")
 
 
 def get_distance_metric_bar_plot(
@@ -126,7 +126,7 @@ def get_distance_metric_bar_plot(
     plt.close()
 
 
-def get_expected_maximizer_metric_vs_f1_score(
+def get_k_means_metric_vs_f1_score(
     auction_train_X: pd.DataFrame,
     auction_train_y: pd.Series,
     num_iterations: int = 10,
@@ -138,7 +138,7 @@ def get_expected_maximizer_metric_vs_f1_score(
     all_accuracies = []
     all_f1_scores = []
     for distance_metric in all_distance_metrics:
-        _, _, accuracy, f1 = fit_expected_maximizer(
+        _, _, accuracy, f1 = fit_k_means(
             auction_train_X=auction_train_X,
             auction_train_y=auction_train_y,
             n_clusters=n_clusters,
@@ -159,7 +159,7 @@ def get_expected_maximizer_metric_vs_f1_score(
     ).astype({"Distance Metric": str, "Accuracy": float, "F1 Score": float})
 
     get_distance_metric_bar_plot(
-        df=per_metric_performance, filename="expected_maximizer_distance_metric_vs_accuracy_f1.png"
+        df=per_metric_performance, filename="k_means_distance_metric_vs_accuracy_f1.png"
     )
 
 
@@ -189,16 +189,16 @@ if __name__ == "__main__":
     num_iterations = 10
     metric = "euclidean"
 
-    # get_expected_maximizer_elbow_graph(
-    #     auction_train_X=auction_train_X,
-    #     auction_train_y=auction_train_y,
-    #     max_clusters=max_clusters,
-    #     num_iterations=num_iterations,
-    #     metric=metric,
-    # )
+    get_k_means_elbow_graph(
+        auction_train_X=auction_train_X,
+        auction_train_y=auction_train_y,
+        max_clusters=max_clusters,
+        num_iterations=num_iterations,
+        metric=metric,
+    )
 
     num_iterations = 50
-    get_expected_maximizer_metric_vs_f1_score(
+    get_k_means_metric_vs_f1_score(
         auction_train_X=auction_train_X,
         auction_train_y=auction_train_y,
         num_iterations=num_iterations,
