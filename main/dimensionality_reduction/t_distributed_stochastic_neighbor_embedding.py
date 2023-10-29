@@ -24,6 +24,7 @@ class TSNEReduction:
             random_state=random_state,
             perplexity=perplexity,
             n_iter=n_iter,
+            method='exact' if n_components >= 4 else 'barnes_hut',
         )
 
     def fit_transform(self, data):
@@ -74,5 +75,6 @@ if __name__ == "__main__":
 
     n_components = 5
     rp_transformer = TSNEReduction(n_components=n_components, random_state=42)
-    rp_transformer.fit(auction_train_X.to_numpy())
-    transformed_data = rp_transformer.transform(auction_train_X.to_numpy())
+    transformed_data = rp_transformer.fit_transform(auction_train_X.to_numpy())
+
+    print(transformed_data)

@@ -67,3 +67,5 @@ if __name__ == "__main__":
     )
     ica_transformer.fit(auction_train_X.to_numpy())
     transformed_data = ica_transformer.transform(auction_train_X.to_numpy())
+
+    print(transformed_data)

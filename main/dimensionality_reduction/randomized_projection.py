@@ -69,3 +69,5 @@ if __name__ == "__main__":
     )
     rp_transformer.fit(auction_train_X.to_numpy())
     transformed_data = rp_transformer.transform(auction_train_X.to_numpy())
+
+    print(transformed_data)

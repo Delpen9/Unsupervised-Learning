@@ -88,3 +88,13 @@ if __name__ == "__main__":
     auction_train_y = auction_train_y.iloc[:, 0]
     auction_val_y = auction_val_y.iloc[:, 0]
     auction_test_y = auction_test_y.iloc[:, 0]
+
+    n_components = 2
+    (gmm, _aic, _bic, accuracy, f1) = get_gmm_bic_aic_accuracy_f1(
+        data=auction_train_X.to_numpy(), n_components=n_components
+    )
+
+    print(_aic)
+    print(_bic)
+    print(accuracy)
+    print(f1)
