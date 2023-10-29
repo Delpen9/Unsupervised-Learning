@@ -23,7 +23,7 @@ from data_preprocessing import (
     convert_pandas_to_dataloader,
 )
 
-from k_means import (
+from clustering.k_means import (
     KMeans,
 )
 

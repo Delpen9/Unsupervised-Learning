@@ -1,3 +1,9 @@
+import warnings
+from sklearn.exceptions import ConvergenceWarning
+
+warnings.simplefilter(action="ignore", category=FutureWarning)
+warnings.simplefilter(action="ignore", category=ConvergenceWarning)
+
 # Standard Libraries
 import time
 
