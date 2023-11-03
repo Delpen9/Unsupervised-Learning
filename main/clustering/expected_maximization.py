@@ -1,5 +1,7 @@
 # Standard library imports
+import time
 from itertools import permutations
+from typing import Union
 
 # Third-party imports
 import numpy as np
@@ -16,6 +18,18 @@ from data_preprocessing import preprocess_datasets
 # Suppress warnings
 warnings.simplefilter(action="ignore", category=FutureWarning)
 warnings.simplefilter(action="ignore", category=ConvergenceWarning)
+
+
+def _timer(func):
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        execution_time = round(end_time - start_time, 2)
+        print(f"{func.__name__} executed in {execution_time} seconds")
+        return result
+
+    return wrapper
 
 
 def get_accuracy_and_f1_score(
@@ -49,22 +63,26 @@ def get_accuracy_and_f1_score(
     return (accuracy, f1)
 
 
+@_timer
 def get_gmm_bic_aic_accuracy_f1(
-    data: pd.DataFrame, n_components: int = 2
-) -> tuple[any, float, float, float, float]:
+    train_X: pd.DataFrame, train_y: pd.DataFrame, n_components: int = 2
+) -> Union[tuple[any, float, float, float, float], tuple[any, float, float]]:
     gmm = GaussianMixture(n_components=n_components, max_iter=100, random_state=42)
-    gmm.fit(auction_train_X.to_numpy())
+    gmm.fit(train_X.to_numpy())
 
-    labels = gmm.predict(auction_train_X.to_numpy())
+    labels = gmm.predict(train_X.to_numpy())
 
-    _aic = gmm.aic(auction_train_X.to_numpy())
-    _bic = gmm.bic(auction_train_X.to_numpy())
+    _aic = gmm.aic(train_X.to_numpy())
+    _bic = gmm.bic(train_X.to_numpy())
 
-    (accuracy, f1) = get_accuracy_and_f1_score(
-        true_labels=auction_train_y.to_numpy().flatten(), assignments=labels
-    )
+    if int(train_y.nunique()) == n_components:
+        (accuracy, f1) = get_accuracy_and_f1_score(
+            true_labels=train_y.to_numpy().flatten(), assignments=labels
+        )
 
-    return (gmm, _aic, _bic, accuracy, f1)
+        return (gmm, _aic, _bic, accuracy, f1)
+    else:
+        return (gmm, _aic, _bic)
 
 
 if __name__ == "__main__":
@@ -91,7 +109,7 @@ if __name__ == "__main__":
 
     n_components = 2
     (gmm, _aic, _bic, accuracy, f1) = get_gmm_bic_aic_accuracy_f1(
-        data=auction_train_X.to_numpy(), n_components=n_components
+        train_X=auction_train_X, train_y=auction_train_y, n_components=n_components
     )
 
     print(_aic)
