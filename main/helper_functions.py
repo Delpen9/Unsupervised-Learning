@@ -500,7 +500,7 @@ def get_optimal_tsne_components(
     dataset_type: str = "auction",
 ) -> None:
     max_components = min(max_components, data.shape[0], data.shape[1])
-    
+
     kl_divergences = []
     components_range = range(1, max_components + 1)
     for n_components in components_range:
@@ -517,5 +517,45 @@ def get_optimal_tsne_components(
 
     plt.savefig(
         rf"{output_filepath}{dataset_type}_tsne_kl_divergence_per_n_components.png"
+    )
+    plt.close()
+
+def get_t_sne_transformed_output(
+    train_X: pd.DataFrame,
+    train_y: pd.DataFrame,
+    output_filepath: str = "../output/dimensionality_reduction/",
+    dataset_type: str = "auction",
+) -> None:
+    tsne_reduction = RandomProjectionDimensionalityReduction(n_components=2)
+    tsne_reduction.fit(train_X)
+    transformed_train_X = tsne_reduction.transform(train_X)
+
+    data = pd.concat(
+        [pd.DataFrame(transformed_train_X), train_y.reset_index(drop=True)], axis=1
+    )
+    data.columns = ["t-SNE Component 1", "t-SNE Component 2", "Label"]
+
+    plt.figure(figsize=(10, 8))
+    sns.scatterplot(
+        data=data,
+        x="t-SNE Component 1",
+        y="t-SNE Component 2",
+        hue="Label",
+        palette="viridis",
+        s=100,
+        alpha=0.7,
+    )
+
+    plt.grid(True)
+
+    plt.title(
+        f"{dataset_type.capitalize()}: t-SNE  - 2 t-SNE Components", fontsize=16
+    )
+    plt.xlabel("t-SNE Component 1", fontsize=14)
+    plt.ylabel("t-SNE Component 2", fontsize=14)
+    plt.legend(title="Label", fontsize="large", title_fontsize="13", loc="best")
+
+    plt.savefig(
+        rf"{output_filepath}{dataset_type}_t_sne_2_t_sne_component_scatter_plot.png"
     )
     plt.close()
