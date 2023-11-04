@@ -9,6 +9,7 @@ import numpy as np
 
 from sklearn.decomposition import FastICA
 import matplotlib.pyplot as plt
+from scipy.stats import kurtosis
 
 from data_preprocessing import (
     preprocess_datasets,
@@ -30,13 +31,10 @@ class ICADimensionalityReduction:
     def fit_transform(self, data):
         return self.ica.fit_transform(data)
 
-    def plot_components(self, data):
+    def calculate_kurtosis(self, data):
         transformed_data = self.fit_transform(data)
-        for index, component in enumerate(transformed_data.T):
-            plt.figure()
-            plt.plot(component)
-            plt.title(f"Independent Component {index+1}")
-            plt.show()
+        kurtosis_values = kurtosis(transformed_data, axis=0, fisher=True)
+        return kurtosis_values
 
 
 if __name__ == "__main__":

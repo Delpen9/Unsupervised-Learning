@@ -26,13 +26,8 @@ class PCADimensionalityReduction:
     def transform(self, data):
         return self.pca.transform(data)
 
-    def plot_explained_variance(self):
-        explained_variance = self.pca.explained_variance_ratio_
-        plt.bar(range(len(explained_variance)), explained_variance, alpha=0.7)
-        plt.xlabel("Principal Component")
-        plt.ylabel("Explained Variance Ratio")
-        plt.title("Explained Variance by Each Principal Component")
-        plt.show()
+    def get_explained_variance(self):
+        return np.array(self.pca.explained_variance_ratio_).sum()
 
 
 if __name__ == "__main__":
