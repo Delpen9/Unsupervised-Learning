@@ -39,6 +39,9 @@ from helper_functions import (
     get_optimal_randomized_projection_components,
     get_randomized_projection_transformed_output,
     get_optimal_tsne_components,
+    get_t_sne_transformed_output,
+    get_k_means_for_all_dimensionality_reduction_techniques,
+    get_expected_maximization_for_all_dimensionality_reduction_techniques,
 )
 
 def _timer(func):
@@ -225,14 +228,43 @@ def part_2_4(
     )
     get_optimal_tsne_components(
         dropout_train_X,
-        max_components=51,
+        max_components=3,
+        dataset_type="dropout",
+    )
+    get_t_sne_transformed_output(
+        auction_train_X,
+        auction_train_y,
+        dataset_type="auction",
+    )
+    get_t_sne_transformed_output(
+        dropout_train_X,
+        dropout_train_y,
         dataset_type="dropout",
     )
 
+def part_3(
+    auction_train_X: pd.DataFrame,
+    auction_train_y: pd.DataFrame,
+    dropout_train_X: pd.DataFrame,
+    dropout_train_y: pd.DataFrame,
+) -> None:
+    get_k_means_for_all_dimensionality_reduction_techniques(
+        auction_train_X,
+        auction_train_y,
+        dropout_train_X,
+        dropout_train_y,
+    )
+    get_expected_maximization_for_all_dimensionality_reduction_techniques(
+        auction_train_X,
+        auction_train_y,
+        dropout_train_X,
+        dropout_train_y,
+    )
 
 if __name__ == "__main__":
     RUN_PART_1 = False
-    RUN_PART_2 = True
+    RUN_PART_2 = False
+    RUN_PART_3 = True
 
     (
         # Auction
@@ -260,7 +292,10 @@ if __name__ == "__main__":
         part_1_2(auction_train_X, auction_train_y, dropout_train_X, dropout_train_y)
         ## TODO: Get accuracy and F1 stats for auction and dropout using expected maximization
     if RUN_PART_2:
-        # part_2_1(auction_train_X, auction_train_y, dropout_train_X, dropout_train_y)
-        # part_2_2(auction_train_X, auction_train_y, dropout_train_X, dropout_train_y)
-        # part_2_3(auction_train_X, auction_train_y, dropout_train_X, dropout_train_y)
+        part_2_1(auction_train_X, auction_train_y, dropout_train_X, dropout_train_y)
+        part_2_2(auction_train_X, auction_train_y, dropout_train_X, dropout_train_y)
+        part_2_3(auction_train_X, auction_train_y, dropout_train_X, dropout_train_y)
         part_2_4(auction_train_X, auction_train_y, dropout_train_X, dropout_train_y)
+    if RUN_PART_3:
+        part_3(auction_train_X, auction_train_y, dropout_train_X, dropout_train_y)
+

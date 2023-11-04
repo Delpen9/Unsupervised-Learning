@@ -26,6 +26,9 @@ class PCADimensionalityReduction:
     def transform(self, data):
         return self.pca.transform(data)
 
+    def fit_transform(self, data):
+        return self.pca.fit_transform(data)
+
     def get_explained_variance(self):
         return np.array(self.pca.explained_variance_ratio_).sum()
 

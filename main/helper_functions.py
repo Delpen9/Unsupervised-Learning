@@ -69,7 +69,6 @@ def fit_k_means(
 
 def save_elbow_graph(
     df: pd.DataFrame,
-    output_filepath: str = "../output/clustering/",
     filename: str = "temp.png",
 ) -> None:
     sns.set_style("whitegrid")
@@ -85,7 +84,7 @@ def save_elbow_graph(
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
     plt.tight_layout()
-    plt.savefig(rf"{output_filepath}{filename}")
+    plt.savefig(filename)
     plt.close()
 
 
@@ -95,6 +94,7 @@ def get_k_means_elbow_graph(
     max_clusters: int = 30,
     num_iterations: int = 10,
     metric: str = "euclidean",
+    output_filepath: str = "../output/clustering/",
     dataset_type: str = "auction",
 ) -> None:
     elbow_data = []
@@ -103,12 +103,14 @@ def get_k_means_elbow_graph(
         elbow_data.append([n_clusters, inertia])
     elbow_df = pd.DataFrame(elbow_data, columns=["Clusters", "Inertia"])
 
-    save_elbow_graph(df=elbow_df, filename=rf"{dataset_type}_k_means_elbow_graph.png")
+    save_elbow_graph(
+        df=elbow_df,
+        filename=rf"{output_filepath}{dataset_type}_k_means_elbow_graph.png",
+    )
 
 
 def get_distance_metric_bar_plot(
     df: pd.DataFrame,
-    output_filepath: str = "../output/clustering/",
     filename: str = "temp.png",
 ) -> None:
     df_melted = df.melt(
@@ -137,7 +139,7 @@ def get_distance_metric_bar_plot(
     plt.legend(title="Metric")
     plt.tight_layout()
 
-    plt.savefig(rf"{output_filepath}{filename}")
+    plt.savefig(filename)
     plt.close()
 
 
@@ -145,6 +147,7 @@ def get_k_means_metric_vs_f1_score(
     train_X: pd.DataFrame,
     train_y: pd.Series,
     num_iterations: int = 10,
+    output_filepath: str = "../output/clustering/",
     dataset_type: str = "auction",
 ) -> None:
     n_clusters = int(train_y.nunique())
@@ -176,7 +179,7 @@ def get_k_means_metric_vs_f1_score(
 
     get_distance_metric_bar_plot(
         df=per_metric_performance,
-        filename=rf"{dataset_type}_k_means_distance_metric_vs_accuracy_f1.png",
+        filename=rf"{output_filepath}{dataset_type}_k_means_distance_metric_vs_accuracy_f1.png",
     )
 
 
@@ -453,6 +456,7 @@ def get_optimal_randomized_projection_components(
     )
     plt.close()
 
+
 def get_randomized_projection_transformed_output(
     train_X: pd.DataFrame,
     train_y: pd.DataFrame,
@@ -466,7 +470,11 @@ def get_randomized_projection_transformed_output(
     data = pd.concat(
         [pd.DataFrame(transformed_train_X), train_y.reset_index(drop=True)], axis=1
     )
-    data.columns = ["Randomized Projection Component 1", "Randomized Projection Component 2", "Label"]
+    data.columns = [
+        "Randomized Projection Component 1",
+        "Randomized Projection Component 2",
+        "Label",
+    ]
 
     plt.figure(figsize=(10, 8))
     sns.scatterplot(
@@ -482,7 +490,8 @@ def get_randomized_projection_transformed_output(
     plt.grid(True)
 
     plt.title(
-        f"{dataset_type.capitalize()}: Randomized Projection - 2 Randomized Projection Components", fontsize=16
+        f"{dataset_type.capitalize()}: Randomized Projection - 2 Randomized Projection Components",
+        fontsize=16,
     )
     plt.xlabel("Randomized Projection Component 1", fontsize=14)
     plt.ylabel("Randomized Projection Component 2", fontsize=14)
@@ -492,6 +501,7 @@ def get_randomized_projection_transformed_output(
         rf"{output_filepath}{dataset_type}_rp_2_randomized_projection_component_scatter_plot.png"
     )
     plt.close()
+
 
 def get_optimal_tsne_components(
     data: pd.DataFrame,
@@ -509,16 +519,17 @@ def get_optimal_tsne_components(
         kl_divergences.append(tsne_reduction.kl_divergence())
 
     plt.figure(figsize=(10, 6))
-    plt.plot(components_range, kl_divergences, marker='o')
-    plt.xlabel('Number of Components')
-    plt.ylabel('Final KL Divergence')
-    plt.title('t-SNE Final KL Divergence for Different Numbers of Components')
+    plt.plot(components_range, kl_divergences, marker="o")
+    plt.xlabel("Number of Components")
+    plt.ylabel("Final KL Divergence")
+    plt.title("t-SNE Final KL Divergence for Different Numbers of Components")
     plt.grid(True)
 
     plt.savefig(
         rf"{output_filepath}{dataset_type}_tsne_kl_divergence_per_n_components.png"
     )
     plt.close()
+
 
 def get_t_sne_transformed_output(
     train_X: pd.DataFrame,
@@ -548,9 +559,7 @@ def get_t_sne_transformed_output(
 
     plt.grid(True)
 
-    plt.title(
-        f"{dataset_type.capitalize()}: t-SNE  - 2 t-SNE Components", fontsize=16
-    )
+    plt.title(f"{dataset_type.capitalize()}: t-SNE  - 2 t-SNE Components", fontsize=16)
     plt.xlabel("t-SNE Component 1", fontsize=14)
     plt.ylabel("t-SNE Component 2", fontsize=14)
     plt.legend(title="Label", fontsize="large", title_fontsize="13", loc="best")
@@ -559,3 +568,170 @@ def get_t_sne_transformed_output(
         rf"{output_filepath}{dataset_type}_t_sne_2_t_sne_component_scatter_plot.png"
     )
     plt.close()
+
+
+def get_k_means_for_all_dimensionality_reduction_techniques(
+    auction_train_X: pd.DataFrame,
+    auction_train_y: pd.DataFrame,
+    dropout_train_X: pd.DataFrame,
+    dropout_train_y: pd.DataFrame,
+) -> None:
+    auction_optimal_component_selection = 4
+    dropout_optimal_component_selection = 10  # t-SNE takes too long on dropout; omit it
+
+    algorithm_acronyms = [
+        "pca",
+        "ica",
+        "rp",
+        "t_sne"
+    ]
+
+    auction_algorithms = [
+        PCADimensionalityReduction(n_components=auction_optimal_component_selection),
+        ICADimensionalityReduction(n_components=auction_optimal_component_selection),
+        RandomProjectionDimensionalityReduction(
+            n_components=auction_optimal_component_selection
+        ),
+        TSNEReduction(n_components=auction_optimal_component_selection),
+    ]
+
+    dropout_algorithms = [
+        PCADimensionalityReduction(n_components=dropout_optimal_component_selection),
+        ICADimensionalityReduction(n_components=dropout_optimal_component_selection),
+        RandomProjectionDimensionalityReduction(
+            n_components=dropout_optimal_component_selection
+        ),
+        None,
+    ]
+
+    max_clusters = 30
+    metric = "euclidean"
+    for auction_algorithm, dropout_algorithm, algorithm_acronym in zip(
+        auction_algorithms, dropout_algorithms, algorithm_acronyms
+    ):
+        transformed_auction_train_X = pd.DataFrame(auction_algorithm.fit_transform(
+            data=auction_train_X
+        ))
+        if algorithm_acronym != "t_sne":
+            transformed_dropout_train_X = pd.DataFrame(dropout_algorithm.fit_transform(
+                data=dropout_train_X
+            ))
+
+        output_filepath = rf"../output/combined_clustering_dimensionality_reduction/{algorithm_acronym}/"
+
+        #######################################
+        # K-Means: Auction
+        #######################################
+        num_iterations = 10
+        get_k_means_elbow_graph(
+            train_X=transformed_auction_train_X,
+            train_y=auction_train_y,
+            max_clusters=max_clusters,
+            num_iterations=num_iterations,
+            metric=metric,
+            output_filepath=output_filepath,
+            dataset_type="auction",
+        )
+
+        num_iterations = 50
+        get_k_means_metric_vs_f1_score(
+            train_X=transformed_auction_train_X,
+            train_y=auction_train_y,
+            num_iterations=num_iterations,
+            output_filepath=output_filepath,
+            dataset_type="auction",
+        )
+
+        #######################################
+        # K-Means: Dropout
+        #######################################
+        if algorithm_acronym != "t_sne":
+            num_iterations = 10
+            get_k_means_elbow_graph(
+                train_X=transformed_dropout_train_X,
+                train_y=dropout_train_y,
+                max_clusters=max_clusters,
+                num_iterations=num_iterations,
+                metric=metric,
+                output_filepath=output_filepath,
+                dataset_type="dropout",
+            )
+
+            num_iterations = 50
+            get_k_means_metric_vs_f1_score(
+                train_X=transformed_dropout_train_X,
+                train_y=dropout_train_y,
+                num_iterations=num_iterations,
+                output_filepath=output_filepath,
+                dataset_type="dropout",
+            )
+
+
+def get_expected_maximization_for_all_dimensionality_reduction_techniques(
+    auction_train_X: pd.DataFrame,
+    auction_train_y: pd.DataFrame,
+    dropout_train_X: pd.DataFrame,
+    dropout_train_y: pd.DataFrame,
+) -> None:
+    auction_optimal_component_selection = 4
+    dropout_optimal_component_selection = 10  # t-SNE takes too long on dropout; omit it
+
+    algorithm_acronyms = [
+        "pca",
+        "ica",
+        "rp",
+        "t_sne"
+    ]
+
+    auction_algorithms = [
+        PCADimensionalityReduction(n_components=auction_optimal_component_selection),
+        ICADimensionalityReduction(n_components=auction_optimal_component_selection),
+        RandomProjectionDimensionalityReduction(
+            n_components=auction_optimal_component_selection
+        ),
+        TSNEReduction(n_components=auction_optimal_component_selection),
+    ]
+
+    dropout_algorithms = [
+        PCADimensionalityReduction(n_components=dropout_optimal_component_selection),
+        ICADimensionalityReduction(n_components=dropout_optimal_component_selection),
+        RandomProjectionDimensionalityReduction(
+            n_components=dropout_optimal_component_selection
+        ),
+        None,
+    ]
+
+    max_clusters = 30
+    metric = "euclidean"
+    for auction_algorithm, dropout_algorithm, algorithm_acronym in zip(
+        auction_algorithms, dropout_algorithms, algorithm_acronyms
+    ):
+        transformed_auction_train_X = pd.DataFrame(auction_algorithm.fit_transform(
+            data=auction_train_X
+        ))
+        if algorithm_acronym != "t_sne":
+            transformed_dropout_train_X = pd.DataFrame(dropout_algorithm.fit_transform(
+                data=dropout_train_X
+            ))
+
+        output_filepath = rf"../output/combined_clustering_dimensionality_reduction/{algorithm_acronym}/"
+
+        #######################################
+        # Expected Maximization: Auction
+        #######################################
+        get_expected_maximization_performance_line_charts(
+            train_X=transformed_auction_train_X,
+            train_y=auction_train_y,
+            output_filepath=output_filepath,
+            dataset_type="auction",
+        )
+
+        #######################################
+        # Expected Maximization: Dropout
+        #######################################
+        get_expected_maximization_performance_line_charts(
+            train_X=transformed_dropout_train_X,
+            train_y=dropout_train_y,
+            output_filepath=output_filepath,
+            dataset_type="dropout",
+        )
