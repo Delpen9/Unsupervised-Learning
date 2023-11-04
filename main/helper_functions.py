@@ -35,6 +35,14 @@ from dimensionality_reduction.independent_component_analysis import (
     ICADimensionalityReduction,
 )
 
+from dimensionality_reduction.randomized_projection import (
+    RandomProjectionDimensionalityReduction,
+)
+
+from dimensionality_reduction.t_distributed_stochastic_neighbor_embedding import (
+    TSNEReduction,
+)
+
 
 def fit_k_means(
     train_X: pd.DataFrame,
@@ -413,5 +421,101 @@ def get_ica_transformed_output(
 
     plt.savefig(
         rf"{output_filepath}{dataset_type}_ica_2_independent_component_scatter_plot.png"
+    )
+    plt.close()
+
+
+def get_optimal_randomized_projection_components(
+    data: pd.DataFrame,
+    max_components: int = 10,
+    output_filepath: str = "../output/dimensionality_reduction/",
+    dataset_type: str = "auction",
+) -> None:
+    errors = []
+    components_range = range(1, max_components + 1)
+    for n_components in components_range:
+        rp_reduction = RandomProjectionDimensionalityReduction(
+            n_components=n_components, random_state=42
+        )
+        error = rp_reduction.reconstruction_error(data)
+        errors.append(error)
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(components_range, errors, marker="o")
+    plt.xlabel("Number of Components")
+    plt.ylabel("Reconstruction Error")
+    plt.title(
+        "Reconstruction Error as a Function of the Number of Randomized Projection Components"
+    )
+    plt.grid(True)
+    plt.savefig(
+        rf"{output_filepath}{dataset_type}_randomized_projection_reconstruction_error_per_n_components.png"
+    )
+    plt.close()
+
+def get_randomized_projection_transformed_output(
+    train_X: pd.DataFrame,
+    train_y: pd.DataFrame,
+    output_filepath: str = "../output/dimensionality_reduction/",
+    dataset_type: str = "auction",
+) -> None:
+    rp_reduction = RandomProjectionDimensionalityReduction(n_components=2)
+    rp_reduction.fit(train_X)
+    transformed_train_X = rp_reduction.transform(train_X)
+
+    data = pd.concat(
+        [pd.DataFrame(transformed_train_X), train_y.reset_index(drop=True)], axis=1
+    )
+    data.columns = ["Randomized Projection Component 1", "Randomized Projection Component 2", "Label"]
+
+    plt.figure(figsize=(10, 8))
+    sns.scatterplot(
+        data=data,
+        x="Randomized Projection Component 1",
+        y="Randomized Projection Component 2",
+        hue="Label",
+        palette="viridis",
+        s=100,
+        alpha=0.7,
+    )
+
+    plt.grid(True)
+
+    plt.title(
+        f"{dataset_type.capitalize()}: Randomized Projection - 2 Randomized Projection Components", fontsize=16
+    )
+    plt.xlabel("Randomized Projection Component 1", fontsize=14)
+    plt.ylabel("Randomized Projection Component 2", fontsize=14)
+    plt.legend(title="Label", fontsize="large", title_fontsize="13", loc="best")
+
+    plt.savefig(
+        rf"{output_filepath}{dataset_type}_rp_2_randomized_projection_component_scatter_plot.png"
+    )
+    plt.close()
+
+def get_optimal_tsne_components(
+    data: pd.DataFrame,
+    max_components: int = 10,
+    output_filepath: str = "../output/dimensionality_reduction/",
+    dataset_type: str = "auction",
+) -> None:
+    max_components = min(max_components, data.shape[0], data.shape[1])
+    
+    kl_divergences = []
+    components_range = range(1, max_components + 1)
+    for n_components in components_range:
+        tsne_reduction = TSNEReduction(n_components=n_components, random_state=42)
+        tsne_reduction.fit_transform(data)
+        kl_divergences.append(tsne_reduction.kl_divergence())
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(components_range, kl_divergences, marker='o')
+    plt.xlabel('Number of Components')
+    plt.ylabel('Final KL Divergence')
+    plt.title('t-SNE Final KL Divergence for Different Numbers of Components')
+    plt.grid(True)
+
+    plt.savefig(
+        rf"{output_filepath}{dataset_type}_tsne_kl_divergence_per_n_components.png"
     )
     plt.close()

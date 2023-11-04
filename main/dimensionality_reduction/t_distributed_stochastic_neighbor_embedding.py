@@ -24,31 +24,14 @@ class TSNEReduction:
             random_state=random_state,
             perplexity=perplexity,
             n_iter=n_iter,
-            method='exact' if n_components >= 4 else 'barnes_hut',
+            method="exact" if n_components >= 4 else "barnes_hut",
         )
 
     def fit_transform(self, data):
         return self.tsne.fit_transform(data)
 
-    def plot_components(self, data, labels=None):
-        transformed_data = self.fit_transform(data)
-
-        plt.figure(figsize=(10, 8))
-
-        if labels is not None:
-            plt.scatter(
-                transformed_data[:, 0],
-                transformed_data[:, 1],
-                c=labels,
-                cmap="jet",
-                edgecolor="k",
-            )
-            plt.colorbar()
-        else:
-            plt.scatter(transformed_data[:, 0], transformed_data[:, 1], edgecolor="k")
-
-        plt.title("t-SNE Reduction")
-        plt.show()
+    def kl_divergence(self):
+        return self.tsne.kl_divergence_
 
 
 if __name__ == "__main__":
@@ -74,7 +57,7 @@ if __name__ == "__main__":
     auction_test_y = auction_test_y.iloc[:, 0]
 
     n_components = 5
-    rp_transformer = TSNEReduction(n_components=n_components, random_state=42)
-    transformed_data = rp_transformer.fit_transform(auction_train_X.to_numpy())
+    tsne_transformer = TSNEReduction(n_components=n_components, random_state=42)
+    transformed_data = tsne_transformer.fit_transform(auction_train_X.to_numpy())
 
     print(transformed_data)

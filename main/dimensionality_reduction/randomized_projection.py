@@ -32,13 +32,18 @@ class RandomProjectionDimensionalityReduction:
     def fit_transform(self, data):
         return self.rp.fit_transform(data)
 
-    def plot_components(self, data):
-        transformed_data = self.fit_transform(data)
-        for index, component in enumerate(transformed_data.T):
-            plt.figure()
-            plt.plot(component)
-            plt.title(f"Projected Component {index+1}")
-            plt.show()
+    def reconstruction_error(self, data):
+        transformed = self.fit_transform(data)
+        original_dim = data.shape[1]
+        components = self.rp.components_
+        if self.n_components is None:
+            self.n_components = components.shape[0]
+        reconstructed = np.dot(transformed, np.linalg.pinv(components.T))
+        error = (
+            np.linalg.norm(data - reconstructed, "fro") ** 2
+            / np.linalg.norm(data, "fro") ** 2
+        )
+        return error
 
 
 if __name__ == "__main__":
