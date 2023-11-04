@@ -44,6 +44,7 @@ from helper_functions import (
     get_expected_maximization_for_all_dimensionality_reduction_techniques,
 )
 
+
 def _timer(func):
     def wrapper(*args, **kwargs):
         start_time = time.time()
@@ -54,6 +55,7 @@ def _timer(func):
         return result
 
     return wrapper
+
 
 @_timer
 def part_1_1(
@@ -107,6 +109,7 @@ def part_1_1(
         dataset_type="dropout",
     )
 
+
 @_timer
 def part_1_2(
     auction_train_X: pd.DataFrame,
@@ -132,6 +135,7 @@ def part_1_2(
         dataset_type="dropout",
     )
 
+
 @_timer
 def part_2_1(
     auction_train_X: pd.DataFrame,
@@ -155,6 +159,7 @@ def part_2_1(
         dropout_train_y,
         dataset_type="dropout",
     )
+
 
 @_timer
 def part_2_2(
@@ -186,6 +191,7 @@ def part_2_2(
         dataset_type="dropout",
     )
 
+
 @_timer
 def part_2_3(
     auction_train_X: pd.DataFrame,
@@ -213,6 +219,7 @@ def part_2_3(
         dropout_train_y,
         dataset_type="dropout",
     )
+
 
 @_timer
 def part_2_4(
@@ -242,6 +249,7 @@ def part_2_4(
         dataset_type="dropout",
     )
 
+
 def part_3(
     auction_train_X: pd.DataFrame,
     auction_train_y: pd.DataFrame,
@@ -261,10 +269,21 @@ def part_3(
         dropout_train_y,
     )
 
+
+def part_4(
+    auction_train_X: pd.DataFrame,
+    auction_train_y: pd.DataFrame,
+    dropout_train_X: pd.DataFrame,
+    dropout_train_y: pd.DataFrame,
+) -> None:
+    return None
+
+
 if __name__ == "__main__":
     RUN_PART_1 = False
     RUN_PART_2 = False
-    RUN_PART_3 = True
+    RUN_PART_3 = False
+    RUN_PART_4 = True
 
     (
         # Auction
@@ -298,4 +317,5 @@ if __name__ == "__main__":
         part_2_4(auction_train_X, auction_train_y, dropout_train_X, dropout_train_y)
     if RUN_PART_3:
         part_3(auction_train_X, auction_train_y, dropout_train_X, dropout_train_y)
-
+    if RUN_PART_4:
+        part_4(auction_train_X, auction_train_y, dropout_train_X, dropout_train_y)

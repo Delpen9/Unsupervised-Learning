@@ -579,12 +579,7 @@ def get_k_means_for_all_dimensionality_reduction_techniques(
     auction_optimal_component_selection = 4
     dropout_optimal_component_selection = 10  # t-SNE takes too long on dropout; omit it
 
-    algorithm_acronyms = [
-        "pca",
-        "ica",
-        "rp",
-        "t_sne"
-    ]
+    algorithm_acronyms = ["pca", "ica", "rp", "t_sne"]
 
     auction_algorithms = [
         PCADimensionalityReduction(n_components=auction_optimal_component_selection),
@@ -609,13 +604,13 @@ def get_k_means_for_all_dimensionality_reduction_techniques(
     for auction_algorithm, dropout_algorithm, algorithm_acronym in zip(
         auction_algorithms, dropout_algorithms, algorithm_acronyms
     ):
-        transformed_auction_train_X = pd.DataFrame(auction_algorithm.fit_transform(
-            data=auction_train_X
-        ))
+        transformed_auction_train_X = pd.DataFrame(
+            auction_algorithm.fit_transform(data=auction_train_X)
+        )
         if algorithm_acronym != "t_sne":
-            transformed_dropout_train_X = pd.DataFrame(dropout_algorithm.fit_transform(
-                data=dropout_train_X
-            ))
+            transformed_dropout_train_X = pd.DataFrame(
+                dropout_algorithm.fit_transform(data=dropout_train_X)
+            )
 
         output_filepath = rf"../output/combined_clustering_dimensionality_reduction/{algorithm_acronym}/"
 
@@ -676,12 +671,7 @@ def get_expected_maximization_for_all_dimensionality_reduction_techniques(
     auction_optimal_component_selection = 4
     dropout_optimal_component_selection = 10  # t-SNE takes too long on dropout; omit it
 
-    algorithm_acronyms = [
-        "pca",
-        "ica",
-        "rp",
-        "t_sne"
-    ]
+    algorithm_acronyms = ["pca", "ica", "rp", "t_sne"]
 
     auction_algorithms = [
         PCADimensionalityReduction(n_components=auction_optimal_component_selection),
@@ -706,13 +696,13 @@ def get_expected_maximization_for_all_dimensionality_reduction_techniques(
     for auction_algorithm, dropout_algorithm, algorithm_acronym in zip(
         auction_algorithms, dropout_algorithms, algorithm_acronyms
     ):
-        transformed_auction_train_X = pd.DataFrame(auction_algorithm.fit_transform(
-            data=auction_train_X
-        ))
+        transformed_auction_train_X = pd.DataFrame(
+            auction_algorithm.fit_transform(data=auction_train_X)
+        )
         if algorithm_acronym != "t_sne":
-            transformed_dropout_train_X = pd.DataFrame(dropout_algorithm.fit_transform(
-                data=dropout_train_X
-            ))
+            transformed_dropout_train_X = pd.DataFrame(
+                dropout_algorithm.fit_transform(data=dropout_train_X)
+            )
 
         output_filepath = rf"../output/combined_clustering_dimensionality_reduction/{algorithm_acronym}/"
 
