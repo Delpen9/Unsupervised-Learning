@@ -15,6 +15,18 @@ from data_preprocessing import (
     convert_pandas_to_dataloader,
 )
 
+import time
+
+def _timer(func):
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        execution_time = round(end_time - start_time, 2)
+        print(f"{func.__name__} executed in {execution_time} seconds")
+        return result
+
+    return wrapper
 
 class TSNEReduction:
     def __init__(self, n_components=2, random_state=None, perplexity=30, n_iter=300):
@@ -27,9 +39,11 @@ class TSNEReduction:
             method="exact" if n_components >= 4 else "barnes_hut",
         )
 
+    @_timer
     def fit_transform(self, data):
         return self.tsne.fit_transform(data)
 
+    @_timer
     def kl_divergence(self):
         return self.tsne.kl_divergence_
 
