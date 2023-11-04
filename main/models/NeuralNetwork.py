@@ -38,7 +38,7 @@ class MultiClassClassifier(nn.Module):
         x = self.layer3(x)
         return x
 
-def tune_neural_network(
+def train_neural_network(
     train_loader, val_loader, input_size, num_epochs=10, learning_rate=0.001, multiclass=False, num_classes=2,
     hidden_dimension_1=None, hidden_dimension_2=None
 ) -> tuple[any, list, list]:
@@ -152,7 +152,7 @@ if __name__ == "__main__":
     val_loader = DataLoader(val_dataset, batch_size=32)
     test_loader = DataLoader(test_dataset, batch_size=32)
 
-    best_model, _, _ = tune_neural_network(train_loader, val_loader, input_size, num_epochs)
+    best_model, training_loss_history, validation_loss_history = train_neural_network(train_loader, val_loader, input_size, num_epochs)
 
     auc, accuracy = evaluate_model(best_model, test_loader)
     print(f"Test Accuracy: {accuracy:.4f}")

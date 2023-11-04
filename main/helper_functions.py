@@ -16,6 +16,15 @@ import seaborn as sns
 # SKLearn Libraries
 from sklearn.mixture import GaussianMixture
 
+# PyTorch Modules
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import DataLoader, TensorDataset, random_split
+
+# Model Evaluation
+from sklearn.metrics import roc_auc_score, accuracy_score
+
 # Miscellaneous
 from typing import Union
 
@@ -41,6 +50,11 @@ from dimensionality_reduction.randomized_projection import (
 
 from dimensionality_reduction.t_distributed_stochastic_neighbor_embedding import (
     TSNEReduction,
+)
+
+from models.NeuralNetwork import (
+    train_neural_network,
+    evaluate_model,
 )
 
 
@@ -725,3 +739,95 @@ def get_expected_maximization_for_all_dimensionality_reduction_techniques(
             output_filepath=output_filepath,
             dataset_type="dropout",
         )
+
+
+def get_neural_network_performance_by_dimensionality_reduction_algorithm(
+    # Auction
+    auction_train_X: pd.DataFrame,
+    auction_train_y: pd.DataFrame,
+    auction_val_X: pd.DataFrame,
+    auction_val_y: pd.DataFrame,
+    auction_test_X: pd.DataFrame,
+    auction_test_y: pd.DataFrame,
+    # Dropout
+    dropout_train_X: pd.DataFrame,
+    dropout_train_y: pd.DataFrame,
+    dropout_val_X: pd.DataFrame,
+    dropout_val_y: pd.DataFrame,
+    dropout_test_X: pd.DataFrame,
+    dropout_test_y: pd.DataFrame,
+) -> None:
+    #####################
+    ## Auction
+    #####################
+    auction_train_dataset = TensorDataset(
+        torch.tensor(auction_train_X.values, dtype=torch.float32),
+        torch.tensor(auction_train_y.values, dtype=torch.float32),
+    )
+    auction_validation_dataset = TensorDataset(
+        torch.tensor(auction_val_X.values, dtype=torch.float32),
+        torch.tensor(auction_val_y.values, dtype=torch.float32),
+    )
+    auction_test_dataset = TensorDataset(
+        torch.tensor(auction_test_X.values, dtype=torch.float32),
+        torch.tensor(auction_test_y.values, dtype=torch.float32),
+    )
+
+    auction_train_loader = DataLoader(
+        auction_train_dataset, batch_size=32, shuffle=True
+    )
+    auction_val_loader = DataLoader(auction_validation_dataset, batch_size=32)
+    auction_test_loader = DataLoader(auction_test_dataset, batch_size=32)
+
+    input_size = X.shape[1]
+    num_epochs = 200
+    best_model, auction_training_loss_history, auction_validation_loss_history = train_neural_network(
+        auction_train_loader, auction_val_loader, input_size, num_epochs
+    )
+
+    auction_test_auc, auction_test_accuracy = evaluate_model(
+        best_model, auction_test_loader
+    )
+
+    #####################
+    ## Dropout
+    #####################
+    dropout_train_dataset = TensorDataset(
+        torch.tensor(dropout_train_X.values, dtype=torch.float32),
+        torch.tensor(dropout_train_y.values, dtype=torch.float32),
+    )
+    dropout_validation_dataset = TensorDataset(
+        torch.tensor(dropout_val_X.values, dtype=torch.float32),
+        torch.tensor(dropout_val_y.values, dtype=torch.float32),
+    )
+    dropout_test_dataset = TensorDataset(
+        torch.tensor(dropout_test_X.values, dtype=torch.float32),
+        torch.tensor(dropout_test_y.values, dtype=torch.float32),
+    )
+
+    dropout_train_loader = DataLoader(
+        dropout_train_dataset, batch_size=32, shuffle=True
+    )
+    dropout_val_loader = DataLoader(dropout_validation_dataset, batch_size=32)
+    dropout_test_loader = DataLoader(dropout_test_dataset, batch_size=32)
+
+    input_size = X.shape[1]
+    num_epochs = 200
+    best_model, dropout_training_loss_history, dropout_validation_loss_history = train_neural_network(
+        dropout_train_loader, dropout_val_loader, input_size, num_epochs
+    )
+
+    dropout_test_auc, dropout_test_accuracy = evaluate_model(
+        best_model, dropout_test_loader
+    )
+
+    accuracy_auc_df = pd.DataFrame(
+        [
+            ["Auction", auction_test_accuracy, auction_test_auc],
+            ["Dropout", dropout_test_accuracy, dropout_test_auc]
+        ],
+        columns=["Dataset", "Accuracy", "AUC"]
+    )
+    print(accuracy_auc_df)
+
+    return accuracy_auc_df
