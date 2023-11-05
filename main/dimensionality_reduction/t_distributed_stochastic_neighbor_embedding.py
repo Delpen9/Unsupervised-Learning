@@ -44,6 +44,10 @@ class TSNEReduction:
         return self.tsne.fit_transform(data)
 
     @_timer
+    def transform(self, data):
+        return self.tsne.transform(data)
+
+    @_timer
     def kl_divergence(self):
         return self.tsne.kl_divergence_
 

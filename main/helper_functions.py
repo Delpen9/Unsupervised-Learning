@@ -756,6 +756,8 @@ def get_neural_network_performance(
     dropout_val_y: pd.DataFrame,
     dropout_test_X: pd.DataFrame,
     dropout_test_y: pd.DataFrame,
+    clustering_algorithm: str = "None",
+    dimensionality_reduction_algorithm: str = "None",
 ) -> tuple[pd.DataFrame, list[float], list[float], list[float], list[float]]:
     #####################
     ## Auction
@@ -845,10 +847,28 @@ def get_neural_network_performance(
 
     accuracy_auc_df = pd.DataFrame(
         [
-            ["Auction", auction_test_accuracy, auction_test_auc],
-            ["Dropout", dropout_test_accuracy, dropout_test_auc],
+            [
+                dimensionality_reduction_algorithm,
+                clustering_algorithm,
+                "Auction",
+                auction_test_accuracy,
+                auction_test_auc,
+            ],
+            [
+                dimensionality_reduction_algorithm,
+                clustering_algorithm,
+                "Dropout",
+                dropout_test_accuracy,
+                dropout_test_auc,
+            ],
         ],
-        columns=["Dataset", "Accuracy", "AUC"],
+        columns=[
+            "Dimensional Reduction Algorithm",
+            "Clustering Algorithm",
+            "Dataset",
+            "Accuracy",
+            "AUC",
+        ],
     )
 
     return (
@@ -858,3 +878,153 @@ def get_neural_network_performance(
         dropout_training_loss_history,
         dropout_validation_loss_history,
     )
+
+
+def get_neural_network_performance_by_dimensionality_reduction_algorithm(
+    # Auction
+    auction_train_X: pd.DataFrame,
+    auction_train_y: pd.DataFrame,
+    auction_val_X: pd.DataFrame,
+    auction_val_y: pd.DataFrame,
+    auction_test_X: pd.DataFrame,
+    auction_test_y: pd.DataFrame,
+    # Dropout
+    dropout_train_X: pd.DataFrame,
+    dropout_train_y: pd.DataFrame,
+    dropout_val_X: pd.DataFrame,
+    dropout_val_y: pd.DataFrame,
+    dropout_test_X: pd.DataFrame,
+    dropout_test_y: pd.DataFrame,
+) -> tuple[pd.DataFrame, list[float], list[float], list[float], list[float]]:
+    def plot_performance_curves(
+        training_loss_history: list[float],
+        validation_loss_history: list[float],
+        filename: str = "",
+        dataset_type: str = "auction",
+    ) -> None:
+        plt.figure(figsize=(12, 6))
+
+        plt.plot(training_loss_history, color="red", label="Training")
+        plt.plot(
+            validation_loss_history,
+            color="blue",
+            label="Validation",
+            linestyle="dotted",
+        )
+        plt.legend()
+
+        plt.title(
+            rf"{dataset_type.title()}: Neural Network Performance Curve per Epoch"
+        )
+        plt.xlabel("Epoch")
+        plt.ylabel("Loss Metric")
+
+        plt.grid(True, which="both", linestyle="--", linewidth=0.5)
+        plt.savefig(filename)
+
+    auction_optimal_component_selection = 4
+    dropout_optimal_component_selection = 10  # t-SNE takes too long on dropout; omit it
+
+    algorithm_acronyms = [
+        "pca",
+        "ica",
+        "rp",
+        "t_sne"
+    ]
+
+    auction_algorithms = [
+        PCADimensionalityReduction(n_components=auction_optimal_component_selection),
+        ICADimensionalityReduction(n_components=auction_optimal_component_selection),
+        RandomProjectionDimensionalityReduction(
+            n_components=auction_optimal_component_selection
+        ),
+        TSNEReduction(n_components=auction_optimal_component_selection),
+    ]
+
+    dropout_algorithms = [
+        PCADimensionalityReduction(n_components=dropout_optimal_component_selection),
+        ICADimensionalityReduction(n_components=dropout_optimal_component_selection),
+        RandomProjectionDimensionalityReduction(
+            n_components=dropout_optimal_component_selection
+        ),
+        TSNEReduction(n_components=2),
+    ]
+
+    for auction_algorithm, dropout_algorithm, algorithm_acronym in zip(
+        auction_algorithms, dropout_algorithms, algorithm_acronyms
+    ):
+        transformed_auction_train_X = pd.DataFrame(
+            auction_algorithm.fit_transform(data=auction_train_X)
+        )
+
+        transformed_dropout_train_X = pd.DataFrame(
+            dropout_algorithm.fit_transform(data=dropout_train_X)
+        )
+
+        if algorithm_acronym != "t_sne":
+            transformed_auction_val_X = pd.DataFrame(
+                auction_algorithm.transform(data=auction_val_X)
+            )
+            transformed_auction_test_X = pd.DataFrame(
+                auction_algorithm.transform(data=auction_test_X)
+            )
+
+            transformed_dropout_val_X = pd.DataFrame(
+                dropout_algorithm.transform(data=dropout_val_X)
+            )
+            transformed_dropout_test_X = pd.DataFrame(
+                dropout_algorithm.transform(data=dropout_test_X)
+            )
+        else:
+            transformed_auction_val_X = pd.DataFrame(
+                auction_algorithm.fit_transform(data=auction_val_X)
+            )
+            transformed_auction_test_X = pd.DataFrame(
+                auction_algorithm.fit_transform(data=auction_test_X)
+            )
+            transformed_dropout_val_X = pd.DataFrame(
+                dropout_algorithm.fit_transform(data=dropout_val_X)
+            )
+            transformed_dropout_test_X = pd.DataFrame(
+                dropout_algorithm.fit_transform(data=dropout_test_X)
+            )
+        
+        (
+            accuracy_auc_df,
+            auction_training_loss_history,
+            auction_validation_loss_history,
+            dropout_training_loss_history,
+            dropout_validation_loss_history,
+        ) = get_neural_network_performance(
+            transformed_auction_train_X,
+            auction_train_y,
+            transformed_auction_val_X,
+            auction_val_y,
+            transformed_auction_test_X,
+            auction_test_y,
+            transformed_dropout_train_X,
+            dropout_train_y,
+            transformed_dropout_val_X,
+            dropout_val_y,
+            transformed_dropout_test_X,
+            dropout_test_y,
+            dimensionality_reduction_algorithm=algorithm_acronym,
+        )
+
+        dataset_type = "auction"
+        output_filename = rf"../output/neural_network/dimensionality_reduction/{algorithm_acronym}/{dataset_type}_performance_curve.png"
+        plot_performance_curves(
+            training_loss_history=auction_training_loss_history,
+            validation_loss_history=auction_validation_loss_history,
+            filename=output_filename,
+            dataset_type=dataset_type,
+        )
+
+        dataset_type = "dropout"
+        output_filename = rf"../output/neural_network/dimensionality_reduction/{algorithm_acronym}/{dataset_type}_performance_curve.png"
+        plot_performance_curves(
+            training_loss_history=dropout_training_loss_history,
+            validation_loss_history=dropout_validation_loss_history,
+            filename=output_filename,
+            dataset_type=dataset_type,
+        )
