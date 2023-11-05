@@ -286,7 +286,7 @@ def part_4(
     dropout_test_X: pd.DataFrame,
     dropout_test_y: pd.DataFrame,
 ) -> None:
-    get_neural_network_performance_by_dimensionality_reduction_algorithm(
+    final_accuracy_auc_df = get_neural_network_performance_by_dimensionality_reduction_algorithm(
         auction_train_X,
         auction_train_y,
         auction_val_X,
@@ -316,7 +316,7 @@ def part_5(
     dropout_test_X: pd.DataFrame,
     dropout_test_y: pd.DataFrame,
 ) -> None:
-    get_neural_network_performance_by_clustering_algorithm(
+    final_accuracy_auc_df = get_neural_network_performance_by_clustering_algorithm(
         auction_train_X,
         auction_train_y,
         auction_val_X,
@@ -336,7 +336,7 @@ if __name__ == "__main__":
     RUN_PART_1 = False
     RUN_PART_2 = False
     RUN_PART_3 = False
-    RUN_PART_4 = False
+    RUN_PART_4 = True
     RUN_PART_5 = True
 
     (

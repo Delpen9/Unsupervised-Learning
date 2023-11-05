@@ -895,7 +895,7 @@ def get_neural_network_performance_by_dimensionality_reduction_algorithm(
     dropout_val_y: pd.DataFrame,
     dropout_test_X: pd.DataFrame,
     dropout_test_y: pd.DataFrame,
-) -> tuple[pd.DataFrame, list[float], list[float], list[float], list[float]]:
+) -> pd.DataFrame:
     def plot_performance_curves(
         training_loss_history: list[float],
         validation_loss_history: list[float],
@@ -945,6 +945,16 @@ def get_neural_network_performance_by_dimensionality_reduction_algorithm(
         TSNEReduction(n_components=2),
     ]
 
+    final_accuracy_auc_df = pd.DataFrame(
+        [],
+        columns=[
+            "Dimensional Reduction Algorithm",
+            "Clustering Algorithm",
+            "Dataset",
+            "Accuracy",
+            "AUC",
+        ],
+    )
     for auction_algorithm, dropout_algorithm, algorithm_acronym in zip(
         auction_algorithms, dropout_algorithms, algorithm_acronyms
     ):
@@ -1024,6 +1034,16 @@ def get_neural_network_performance_by_dimensionality_reduction_algorithm(
             dataset_type=dataset_type,
         )
 
+        final_accuracy_auc_df = pd.concat((final_accuracy_auc_df, accuracy_auc_df))
+
+    fig, ax = plt.subplots(figsize=(8, 3))
+    ax.axis('tight')
+    ax.axis('off')
+    ax.table(cellText=final_accuracy_auc_df.values, colLabels=final_accuracy_auc_df.columns, loc='center')
+    plt.savefig("../output/neural_network/dimensionality_reduction/dimensionality_reduction_accuracy_auc_table.png", dpi=200, bbox_inches='tight')
+
+    return final_accuracy_auc_df
+
 
 def get_neural_network_performance_by_clustering_algorithm(
     # Auction
@@ -1040,7 +1060,7 @@ def get_neural_network_performance_by_clustering_algorithm(
     dropout_val_y: pd.DataFrame,
     dropout_test_X: pd.DataFrame,
     dropout_test_y: pd.DataFrame,
-) -> tuple[pd.DataFrame, list[float], list[float], list[float], list[float]]:
+) -> pd.DataFrame:
     def plot_performance_curves(
         training_loss_history: list[float],
         validation_loss_history: list[float],
@@ -1067,11 +1087,8 @@ def get_neural_network_performance_by_clustering_algorithm(
         plt.grid(True, which="both", linestyle="--", linewidth=0.5)
         plt.savefig(filename)
 
-    auction_optimal_component_selection = 30
-    dropout_optimal_component_selection = 10  # t-SNE takes too long on dropout; omit it
-
     algorithm_acronyms = [
-        # "km",
+        "km",
         "em",
     ]
 
@@ -1095,6 +1112,16 @@ def get_neural_network_performance_by_clustering_algorithm(
         GaussianMixture(n_components=10, max_iter=100, random_state=42),
     ]
 
+    final_accuracy_auc_df = pd.DataFrame(
+        [],
+        columns=[
+            "Dimensional Reduction Algorithm",
+            "Clustering Algorithm",
+            "Dataset",
+            "Accuracy",
+            "AUC",
+        ],
+    )
     for auction_algorithm, dropout_algorithm, algorithm_acronym in zip(
         auction_algorithms, dropout_algorithms, algorithm_acronyms
     ):
@@ -1309,7 +1336,7 @@ def get_neural_network_performance_by_clustering_algorithm(
             dropout_val_y,
             transformed_dropout_test_X,
             dropout_test_y,
-            dimensionality_reduction_algorithm=algorithm_acronym,
+            clustering_algorithm=algorithm_acronym,
         )
 
         dataset_type = "auction"
@@ -1329,3 +1356,13 @@ def get_neural_network_performance_by_clustering_algorithm(
             filename=output_filename,
             dataset_type=dataset_type,
         )
+
+        final_accuracy_auc_df = pd.concat((final_accuracy_auc_df, accuracy_auc_df))
+
+    fig, ax = plt.subplots(figsize=(8, 3))
+    ax.axis('tight')
+    ax.axis('off')
+    ax.table(cellText=final_accuracy_auc_df.values, colLabels=final_accuracy_auc_df.columns, loc='center')
+    plt.savefig("../output/neural_network/clustering/clustering_accuracy_auc_table.png", dpi=200, bbox_inches='tight')
+
+    return final_accuracy_auc_df
