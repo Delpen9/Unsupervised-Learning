@@ -741,7 +741,7 @@ def get_expected_maximization_for_all_dimensionality_reduction_techniques(
         )
 
 
-def get_neural_network_performance_by_dimensionality_reduction_algorithm(
+def get_neural_network_performance(
     # Auction
     auction_train_X: pd.DataFrame,
     auction_train_y: pd.DataFrame,
@@ -756,7 +756,7 @@ def get_neural_network_performance_by_dimensionality_reduction_algorithm(
     dropout_val_y: pd.DataFrame,
     dropout_test_X: pd.DataFrame,
     dropout_test_y: pd.DataFrame,
-) -> None:
+) -> tuple[pd.DataFrame, list[float], list[float], list[float], list[float]]:
     #####################
     ## Auction
     #####################
@@ -779,14 +779,25 @@ def get_neural_network_performance_by_dimensionality_reduction_algorithm(
     auction_val_loader = DataLoader(auction_validation_dataset, batch_size=32)
     auction_test_loader = DataLoader(auction_test_dataset, batch_size=32)
 
-    input_size = X.shape[1]
-    num_epochs = 200
-    best_model, auction_training_loss_history, auction_validation_loss_history = train_neural_network(
-        auction_train_loader, auction_val_loader, input_size, num_epochs
+    input_size = auction_train_X.shape[1]
+    num_epochs = 400
+    (
+        best_model,
+        auction_training_loss_history,
+        auction_validation_loss_history,
+    ) = train_neural_network(
+        auction_train_loader,
+        auction_val_loader,
+        input_size,
+        num_epochs,
+        num_classes=2,
+        multiclass=False,
     )
 
     auction_test_auc, auction_test_accuracy = evaluate_model(
-        best_model, auction_test_loader
+        best_model,
+        auction_test_loader,
+        num_classes=2,
     )
 
     #####################
@@ -811,23 +822,39 @@ def get_neural_network_performance_by_dimensionality_reduction_algorithm(
     dropout_val_loader = DataLoader(dropout_validation_dataset, batch_size=32)
     dropout_test_loader = DataLoader(dropout_test_dataset, batch_size=32)
 
-    input_size = X.shape[1]
-    num_epochs = 200
-    best_model, dropout_training_loss_history, dropout_validation_loss_history = train_neural_network(
-        dropout_train_loader, dropout_val_loader, input_size, num_epochs
+    input_size = dropout_train_X.shape[1]
+    num_epochs = 400
+    (
+        best_model,
+        dropout_training_loss_history,
+        dropout_validation_loss_history,
+    ) = train_neural_network(
+        dropout_train_loader,
+        dropout_val_loader,
+        input_size,
+        num_epochs,
+        num_classes=3,
+        multiclass=True,
     )
 
     dropout_test_auc, dropout_test_accuracy = evaluate_model(
-        best_model, dropout_test_loader
+        best_model,
+        dropout_test_loader,
+        num_classes=3,
     )
 
     accuracy_auc_df = pd.DataFrame(
         [
             ["Auction", auction_test_accuracy, auction_test_auc],
-            ["Dropout", dropout_test_accuracy, dropout_test_auc]
+            ["Dropout", dropout_test_accuracy, dropout_test_auc],
         ],
-        columns=["Dataset", "Accuracy", "AUC"]
+        columns=["Dataset", "Accuracy", "AUC"],
     )
-    print(accuracy_auc_df)
 
-    return accuracy_auc_df
+    return (
+        accuracy_auc_df,
+        auction_training_loss_history,
+        auction_validation_loss_history,
+        dropout_training_loss_history,
+        dropout_validation_loss_history,
+    )

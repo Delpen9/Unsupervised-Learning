@@ -42,7 +42,7 @@ from helper_functions import (
     get_t_sne_transformed_output,
     get_k_means_for_all_dimensionality_reduction_techniques,
     get_expected_maximization_for_all_dimensionality_reduction_techniques,
-    get_neural_network_performance_by_dimensionality_reduction_algorithm,
+    get_neural_network_performance,
 )
 
 
@@ -274,11 +274,30 @@ def part_3(
 def part_4(
     auction_train_X: pd.DataFrame,
     auction_train_y: pd.DataFrame,
+    auction_val_X: pd.DataFrame,
+    auction_val_y: pd.DataFrame,
+    auction_test_X: pd.DataFrame,
+    auction_test_y: pd.DataFrame,
     dropout_train_X: pd.DataFrame,
     dropout_train_y: pd.DataFrame,
+    dropout_val_X: pd.DataFrame,
+    dropout_val_y: pd.DataFrame,
+    dropout_test_X: pd.DataFrame,
+    dropout_test_y: pd.DataFrame,
 ) -> None:
-    get_neural_network_performance_by_dimensionality_reduction_algorithm(
-        auction_train_X, auction_train_y, dropout_train_X, dropout_train_y
+    accuracy_auc_df = get_neural_network_performance(
+        auction_train_X,
+        auction_train_y,
+        auction_val_X,
+        auction_val_y,
+        auction_test_X,
+        auction_test_y,
+        dropout_train_X,
+        dropout_train_y,
+        dropout_val_X,
+        dropout_val_y,
+        dropout_test_X,
+        dropout_test_y,
     )
 
 
@@ -321,4 +340,17 @@ if __name__ == "__main__":
     if RUN_PART_3:
         part_3(auction_train_X, auction_train_y, dropout_train_X, dropout_train_y)
     if RUN_PART_4:
-        part_4(auction_train_X, auction_train_y, dropout_train_X, dropout_train_y)
+        part_4(
+            auction_train_X,
+            auction_train_y,
+            auction_val_X,
+            auction_val_y,
+            auction_test_X,
+            auction_test_y,
+            dropout_train_X,
+            dropout_train_y,
+            dropout_val_X,
+            dropout_val_y,
+            dropout_test_X,
+            dropout_test_y,
+        )

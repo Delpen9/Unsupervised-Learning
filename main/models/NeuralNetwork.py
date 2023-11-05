@@ -9,6 +9,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset, random_split
 
 # Model Evaluation
+from sklearn.preprocessing import label_binarize
 from sklearn.metrics import roc_auc_score, accuracy_score
 
 
@@ -39,8 +40,15 @@ class MultiClassClassifier(nn.Module):
         return x
 
 def train_neural_network(
-    train_loader, val_loader, input_size, num_epochs=10, learning_rate=0.001, multiclass=False, num_classes=2,
-    hidden_dimension_1=None, hidden_dimension_2=None
+    train_loader,
+    val_loader,
+    input_size,
+    num_epochs : int = 10,
+    learning_rate : float = 1e-5,
+    multiclass : bool = False,
+    num_classes : int = 2,
+    hidden_dimension_1 : int = 10,
+    hidden_dimension_2 : int = 10,
 ) -> tuple[any, list, list]:
     if multiclass == False:
         model = BinaryClassifier(input_size, hidden_dimension_1, hidden_dimension_2)
@@ -51,6 +59,7 @@ def train_neural_network(
         criterion = nn.BCELoss()
     else:
         criterion = nn.CrossEntropyLoss()
+
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     validation_loss_history = []
@@ -65,7 +74,7 @@ def train_neural_network(
             if multiclass == False:
                 loss = criterion(outputs, labels.unsqueeze(1))
             else:
-                loss = criterion(outputs, labels.to(torch.long))
+                loss = criterion(outputs, labels.squeeze(dim=1).long())
 
             training_loss_epoch.append(loss.item())
 
@@ -81,7 +90,7 @@ def train_neural_network(
                 if multiclass == False:
                     loss = criterion(outputs, labels.unsqueeze(1))
                 else:
-                    loss = criterion(outputs, labels.to(torch.long))
+                    loss = criterion(outputs, labels.squeeze(dim=1).long())
 
                 validation_loss_epoch.append(loss.item())
                 val_loss += loss.item()
@@ -120,11 +129,15 @@ def evaluate_model(model, test_loader, num_classes=2):
                 predicted_probs.extend(probs.numpy())
                 true_labels.extend(labels.numpy())
 
-    auc = roc_auc_score(true_labels, predicted_probs, multi_class='ovr', average='macro')
+    if num_classes == 2:
+        auc = roc_auc_score(true_labels, predicted_probs)
+    else:
+        true_labels_binarized = label_binarize(true_labels, classes=range(num_classes))
+        auc = roc_auc_score(true_labels_binarized, predicted_probs, multi_class='ovr', average='macro')
+
     accuracy = accuracy_score(true_labels, predicted_labels)
 
     return auc, accuracy
-
 
 if __name__ == "__main__":
     data = pd.read_csv("../../data/auction_verification_dataset/data.csv")
