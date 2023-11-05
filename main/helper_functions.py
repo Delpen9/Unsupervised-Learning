@@ -925,12 +925,7 @@ def get_neural_network_performance_by_dimensionality_reduction_algorithm(
     auction_optimal_component_selection = 4
     dropout_optimal_component_selection = 10  # t-SNE takes too long on dropout; omit it
 
-    algorithm_acronyms = [
-        "pca",
-        "ica",
-        "rp",
-        "t_sne"
-    ]
+    algorithm_acronyms = ["pca", "ica", "rp", "t_sne"]
 
     auction_algorithms = [
         PCADimensionalityReduction(n_components=auction_optimal_component_selection),
@@ -988,7 +983,7 @@ def get_neural_network_performance_by_dimensionality_reduction_algorithm(
             transformed_dropout_test_X = pd.DataFrame(
                 dropout_algorithm.fit_transform(data=dropout_test_X)
             )
-        
+
         (
             accuracy_auc_df,
             auction_training_loss_history,
@@ -1022,6 +1017,272 @@ def get_neural_network_performance_by_dimensionality_reduction_algorithm(
 
         dataset_type = "dropout"
         output_filename = rf"../output/neural_network/dimensionality_reduction/{algorithm_acronym}/{dataset_type}_performance_curve.png"
+        plot_performance_curves(
+            training_loss_history=dropout_training_loss_history,
+            validation_loss_history=dropout_validation_loss_history,
+            filename=output_filename,
+            dataset_type=dataset_type,
+        )
+
+
+def get_neural_network_performance_by_clustering_algorithm(
+    # Auction
+    auction_train_X: pd.DataFrame,
+    auction_train_y: pd.DataFrame,
+    auction_val_X: pd.DataFrame,
+    auction_val_y: pd.DataFrame,
+    auction_test_X: pd.DataFrame,
+    auction_test_y: pd.DataFrame,
+    # Dropout
+    dropout_train_X: pd.DataFrame,
+    dropout_train_y: pd.DataFrame,
+    dropout_val_X: pd.DataFrame,
+    dropout_val_y: pd.DataFrame,
+    dropout_test_X: pd.DataFrame,
+    dropout_test_y: pd.DataFrame,
+) -> tuple[pd.DataFrame, list[float], list[float], list[float], list[float]]:
+    def plot_performance_curves(
+        training_loss_history: list[float],
+        validation_loss_history: list[float],
+        filename: str = "",
+        dataset_type: str = "auction",
+    ) -> None:
+        plt.figure(figsize=(12, 6))
+
+        plt.plot(training_loss_history, color="red", label="Training")
+        plt.plot(
+            validation_loss_history,
+            color="blue",
+            label="Validation",
+            linestyle="dotted",
+        )
+        plt.legend()
+
+        plt.title(
+            rf"{dataset_type.title()}: Neural Network Performance Curve per Epoch"
+        )
+        plt.xlabel("Epoch")
+        plt.ylabel("Loss Metric")
+
+        plt.grid(True, which="both", linestyle="--", linewidth=0.5)
+        plt.savefig(filename)
+
+    auction_optimal_component_selection = 30
+    dropout_optimal_component_selection = 10  # t-SNE takes too long on dropout; omit it
+
+    algorithm_acronyms = [
+        "km",
+        "em",
+    ]
+
+    auction_algorithms = [
+        KMeans(
+            X=auction_train_X,
+            true_labels=auction_train_y.values.astype(int).flatten(),
+            n_clusters=30,
+            metric="euclidean",
+        ),
+        GaussianMixture(n_components=10, max_iter=100, random_state=42),
+    ]
+
+    dropout_algorithms = [
+        KMeans(
+            X=dropout_train_X,
+            true_labels=dropout_train_y.values.astype(int).flatten(),
+            n_clusters=30,
+            metric="euclidean",
+        ),
+        GaussianMixture(n_components=10, max_iter=100, random_state=42),
+    ]
+
+    for auction_algorithm, dropout_algorithm, algorithm_acronym in zip(
+        auction_algorithms, dropout_algorithms, algorithm_acronyms
+    ):
+        if algorithm_acronym == "km":
+            #######################
+            ## Auction
+            #######################
+            transformed_auction_train_X, _ = auction_algorithm.get_k_means(50)
+            transformed_auction_train_X = pd.DataFrame(
+                np.array([transformed_auction_train_X]).T, columns=["Cluster"]
+            )
+            transformed_auction_train_X["Cluster"] = pd.Categorical(
+                transformed_auction_train_X["Cluster"],
+                categories=np.arange(0, 30, 1).astype(int),
+            )
+            transformed_auction_train_X = pd.get_dummies(
+                transformed_auction_train_X, columns=["Cluster"], drop_first=False
+            )
+
+            transformed_auction_val_X, _ = auction_algorithm.get_k_means(50)
+            transformed_auction_val_X = pd.DataFrame(
+                np.array([transformed_auction_val_X]).T, columns=["Cluster"]
+            )
+            transformed_auction_val_X["Cluster"] = pd.Categorical(
+                transformed_auction_val_X["Cluster"],
+                categories=np.arange(0, 30, 1).astype(int),
+            )
+            transformed_auction_val_X = pd.get_dummies(
+                transformed_auction_val_X, columns=["Cluster"], drop_first=False
+            )
+
+            transformed_auction_test_X, _ = auction_algorithm.get_k_means(50)
+            transformed_auction_test_X = pd.DataFrame(
+                np.array([transformed_auction_test_X]).T, columns=["Cluster"]
+            )
+            transformed_auction_test_X["Cluster"] = pd.Categorical(
+                transformed_auction_test_X["Cluster"],
+                categories=np.arange(0, 30, 1).astype(int),
+            )
+            transformed_auction_test_X = pd.get_dummies(
+                transformed_auction_test_X, columns=["Cluster"], drop_first=False
+            )
+
+            #######################
+            ## Dropout
+            #######################
+            transformed_dropout_train_X, _ = dropout_algorithm.get_k_means(50)
+            transformed_dropout_train_X = pd.DataFrame(
+                np.array([transformed_dropout_train_X]).T, columns=["Cluster"]
+            )
+            transformed_dropout_train_X["Cluster"] = pd.Categorical(
+                transformed_dropout_train_X["Cluster"],
+                categories=np.arange(0, 30, 1).astype(int),
+            )
+            transformed_dropout_train_X = pd.get_dummies(
+                transformed_dropout_train_X, columns=["Cluster"], drop_first=False
+            )
+
+            transformed_dropout_val_X, _ = dropout_algorithm.get_k_means(50)
+            transformed_dropout_val_X = pd.DataFrame(
+                np.array([transformed_dropout_val_X]).T, columns=["Cluster"]
+            )
+            transformed_dropout_val_X["Cluster"] = pd.Categorical(
+                transformed_dropout_val_X["Cluster"],
+                categories=np.arange(0, 30, 1).astype(int),
+            )
+            transformed_dropout_val_X = pd.get_dummies(
+                transformed_dropout_val_X, columns=["Cluster"], drop_first=False
+            )
+
+            transformed_dropout_test_X, _ = dropout_algorithm.get_k_means(50)
+            transformed_dropout_test_X = pd.DataFrame(
+                np.array([transformed_dropout_test_X]).T, columns=["Cluster"]
+            )
+            transformed_dropout_test_X["Cluster"] = pd.Categorical(
+                transformed_dropout_test_X["Cluster"],
+                categories=np.arange(0, 30, 1).astype(int),
+            )
+            transformed_dropout_test_X = pd.get_dummies(
+                transformed_dropout_test_X, columns=["Cluster"], drop_first=False
+            )
+
+        else:
+            #######################
+            ## Auction
+            #######################
+            auction_algorithm.fit(auction_train_X.to_numpy())
+            transformed_auction_train_X = auction_algorithm.predict(
+                auction_train_X.to_numpy()
+            )
+            transformed_auction_train_X = pd.DataFrame(
+                np.array([transformed_auction_train_X]).T, columns=["Cluster"]
+            )
+            transformed_auction_train_X = pd.get_dummies(
+                transformed_auction_train_X, columns=["Cluster"], drop_first=False
+            )
+
+            auction_algorithm.fit(auction_val_X.to_numpy())
+            transformed_auction_val_X = auction_algorithm.predict(
+                auction_val_X.to_numpy()
+            )
+            transformed_auction_val_X = pd.DataFrame(
+                np.array([transformed_auction_val_X]).T, columns=["Cluster"]
+            )
+            transformed_auction_val_X = pd.get_dummies(
+                transformed_auction_val_X, columns=["Cluster"], drop_first=False
+            )
+
+            auction_algorithm.fit(auction_test_X.to_numpy())
+            transformed_auction_test_X = auction_algorithm.predict(
+                auction_test_X.to_numpy()
+            )
+            transformed_auction_test_X = pd.DataFrame(
+                np.array([transformed_auction_test_X]).T, columns=["Cluster"]
+            )
+            transformed_auction_test_X = pd.get_dummies(
+                transformed_auction_test_X, columns=["Cluster"], drop_first=False
+            )
+
+            #######################
+            ## Dropout
+            #######################
+            dropout_algorithm.fit(dropout_train_X.to_numpy())
+            transformed_dropout_train_X = dropout_algorithm.predict(
+                dropout_train_X.to_numpy()
+            )
+            transformed_dropout_train_X = pd.DataFrame(
+                np.array([transformed_dropout_train_X]).T, columns=["Cluster"]
+            )
+            transformed_dropout_train_X = pd.get_dummies(
+                transformed_dropout_train_X, columns=["Cluster"], drop_first=False
+            )
+
+            dropout_algorithm.fit(dropout_val_X.to_numpy())
+            transformed_dropout_val_X = dropout_algorithm.predict(
+                dropout_val_X.to_numpy()
+            )
+            transformed_dropout_val_X = pd.DataFrame(
+                np.array([transformed_dropout_val_X]).T, columns=["Cluster"]
+            )
+            transformed_dropout_val_X = pd.get_dummies(
+                transformed_dropout_val_X, columns=["Cluster"], drop_first=False
+            )
+
+            dropout_algorithm.fit(dropout_test_X.to_numpy())
+            transformed_dropout_test_X = dropout_algorithm.predict(
+                dropout_test_X.to_numpy()
+            )
+            transformed_dropout_test_X = pd.DataFrame(
+                np.array([transformed_dropout_test_X]).T, columns=["Cluster"]
+            )
+            transformed_dropout_test_X = pd.get_dummies(
+                transformed_dropout_test_X, columns=["Cluster"], drop_first=False
+            )
+
+        (
+            accuracy_auc_df,
+            auction_training_loss_history,
+            auction_validation_loss_history,
+            dropout_training_loss_history,
+            dropout_validation_loss_history,
+        ) = get_neural_network_performance(
+            transformed_auction_train_X,
+            auction_train_y,
+            transformed_auction_val_X,
+            auction_val_y,
+            transformed_auction_test_X,
+            auction_test_y,
+            transformed_dropout_train_X,
+            dropout_train_y,
+            transformed_dropout_val_X,
+            dropout_val_y,
+            transformed_dropout_test_X,
+            dropout_test_y,
+            dimensionality_reduction_algorithm=algorithm_acronym,
+        )
+
+        dataset_type = "auction"
+        output_filename = rf"../output/neural_network/clustering/{algorithm_acronym}/{dataset_type}_performance_curve.png"
+        plot_performance_curves(
+            training_loss_history=auction_training_loss_history,
+            validation_loss_history=auction_validation_loss_history,
+            filename=output_filename,
+            dataset_type=dataset_type,
+        )
+
+        dataset_type = "dropout"
+        output_filename = rf"../output/neural_network/clustering/{algorithm_acronym}/{dataset_type}_performance_curve.png"
         plot_performance_curves(
             training_loss_history=dropout_training_loss_history,
             validation_loss_history=dropout_validation_loss_history,

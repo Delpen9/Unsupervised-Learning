@@ -43,6 +43,7 @@ from helper_functions import (
     get_k_means_for_all_dimensionality_reduction_techniques,
     get_expected_maximization_for_all_dimensionality_reduction_techniques,
     get_neural_network_performance_by_dimensionality_reduction_algorithm,
+    get_neural_network_performance_by_clustering_algorithm,
 )
 
 
@@ -301,11 +302,42 @@ def part_4(
     )
 
 
+def part_5(
+    auction_train_X: pd.DataFrame,
+    auction_train_y: pd.DataFrame,
+    auction_val_X: pd.DataFrame,
+    auction_val_y: pd.DataFrame,
+    auction_test_X: pd.DataFrame,
+    auction_test_y: pd.DataFrame,
+    dropout_train_X: pd.DataFrame,
+    dropout_train_y: pd.DataFrame,
+    dropout_val_X: pd.DataFrame,
+    dropout_val_y: pd.DataFrame,
+    dropout_test_X: pd.DataFrame,
+    dropout_test_y: pd.DataFrame,
+) -> None:
+    get_neural_network_performance_by_clustering_algorithm(
+        auction_train_X,
+        auction_train_y,
+        auction_val_X,
+        auction_val_y,
+        auction_test_X,
+        auction_test_y,
+        dropout_train_X,
+        dropout_train_y,
+        dropout_val_X,
+        dropout_val_y,
+        dropout_test_X,
+        dropout_test_y,
+    )
+
+
 if __name__ == "__main__":
     RUN_PART_1 = False
     RUN_PART_2 = False
     RUN_PART_3 = False
-    RUN_PART_4 = True
+    RUN_PART_4 = False
+    RUN_PART_5 = True
 
     (
         # Auction
@@ -341,6 +373,21 @@ if __name__ == "__main__":
         part_3(auction_train_X, auction_train_y, dropout_train_X, dropout_train_y)
     if RUN_PART_4:
         part_4(
+            auction_train_X,
+            auction_train_y,
+            auction_val_X,
+            auction_val_y,
+            auction_test_X,
+            auction_test_y,
+            dropout_train_X,
+            dropout_train_y,
+            dropout_val_X,
+            dropout_val_y,
+            dropout_test_X,
+            dropout_test_y,
+        )
+    if RUN_PART_5:
+        part_5(
             auction_train_X,
             auction_train_y,
             auction_val_X,
